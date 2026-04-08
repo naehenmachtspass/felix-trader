@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Felix Trader">
+<title>Felix Trader</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#07090f;--card:#0d1119;--card2:#111827;--border:#1f2937;
+  --cyan:#22d3ee;--green:#4ade80;--red:#f87171;--yel:#fbbf24;
+  --pur:#c084fc;--ora:#fb923c;--text:#f1f5f9;--muted:#64748b;
+}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden;}
+button{cursor:pointer;font-family:inherit;border:none;background:none;color:inherit;}
+
+/* HEADER */
+.header{background:var(–card);border-bottom:1px solid var(–border);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+.logo{font-size:18px;font-weight:900;letter-spacing:2px;}
+.logo span{color:var(–cyan);}
+.logo-sub{font-size:10px;color:var(–muted);display:block;margin-top:1px;}
+.market-pill{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;}
+.market-pill.open{background:rgba(74,222,128,.12);color:var(–green);border:1px solid rgba(74,222,128,.25);}
+.market-pill.closed{background:rgba(248,113,113,.12);color:var(–red);border:1px solid rgba(248,113,113,.25);}
+
+/* TABS */
+.tabs{background:var(–card);border-bottom:1px solid var(–border);display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:sticky;top:57px;z-index:99;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:12px 16px;font-size:11px;font-weight:700;color:var(–muted);white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;border-bottom:2px solid transparent;flex-shrink:0;}
+.tab.active{color:var(–cyan);border-bottom-color:var(–cyan);}
+
+/* CONTENT */
+.content{padding:16px;max-width:600px;margin:0 auto;}
+.pane{display:none;}
+.pane.active{display:block;}
+
+/* CARDS */
+.card{background:var(–card);border:1px solid var(–border);border-radius:12px;padding:16px;margin-bottom:14px;}
+.card-lbl{font-size:9px;letter-spacing:3px;color:var(–muted);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.card-lbl::after{content:’’;flex:1;height:1px;background:var(–border);}
+
+/* BADGE / TAG */
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+
+/* GRID */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;}
+.metric{background:var(–card2);border:1px solid var(–border);border-radius:10px;padding:10px 12px;}
+.metric-lbl{font-size:8px;color:var(–muted);letter-spacing:1px;margin-bottom:5px;text-transform:uppercase;}
+.metric-val{font-size:18px;font-weight:900;}
+
+/* BUTTONS */
+.btn-primary{padding:14px 36px;border-radius:10px;border:1px solid rgba(34,211,238,.4);background:rgba(34,211,238,.12);color:var(–cyan);font-size:15px;font-weight:900;letter-spacing:1px;display:inline-flex;align-items:center;gap:8px;}
+.btn-ghost{padding:7px 16px;border-radius:7px;border:1px solid var(–border);color:var(–muted);font-size:11px;}
+.btn-add{padding:10px 20px;border-radius:8px;border:1px solid rgba(34,211,238,.3);background:rgba(34,211,238,.1);color:var(–cyan);font-size:13px;font-weight:700;}
+
+/* AKTIE CARD */
+.aktie-card{background:var(–card);border:1px solid var(–border);border-radius:12px;padding:16px;margin-bottom:12px;}
+.aktie-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.aktie-ticker{font-size:22px;font-weight:900;letter-spacing:1px;}
+.aktie-name{font-size:11px;color:var(–muted);margin-top:2px;}
+.aktie-rr{text-align:right;}
+.aktie-rr-val{font-size:20px;font-weight:900;color:var(–green);}
+.aktie-rr-lbl{font-size:8px;color:var(–muted);letter-spacing:1px;}
+.aktie-boxes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.aktie-box{background:var(–card2);border-radius:8px;padding:10px 12px;}
+.aktie-box-lbl{font-size:8px;color:var(–muted);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;}
+.aktie-box-val{font-size:11px;line-height:1.5;}
+.level-cell{background:var(–card2);border:1px solid var(–border);border-radius:7px;padding:7px 4px;text-align:center;}
+.level-lbl{font-size:7px;color:var(–muted);letter-spacing:.5px;margin-bottom:3px;}
+.level-val{font-size:10px;font-family:monospace;font-weight:700;}
+
+/* PORTFOLIO */
+.pos-item{background:var(–card2);border:1px solid var(–border);border-radius:10px;padding:12px;margin-bottom:8px;}
+.pos-ticker{font-size:15px;font-weight:800;}
+
+/* INPUT */
+.input-group{margin-bottom:8px;}
+.input-lbl{font-size:9px;color:var(–muted);letter-spacing:1px;display:block;margin-bottom:3px;}
+input{background:var(–card2);border:1px solid var(–border);border-radius:8px;padding:9px 12px;color:var(–text);font-size:14px;width:100%;outline:none;-webkit-appearance:none;}
+input:focus{border-color:var(–cyan);}
+
+/* CHECKLIST */
+.cl-item{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(–border);cursor:pointer;}
+.cl-box{width:24px;height:24px;border:2px solid var(–border);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .15s;}
+.cl-box.chk{background:var(–green);border-color:var(–green);color:#000;}
+.cl-text{font-size:13px;}
+.cl-text.done{color:var(–muted);text-decoration:line-through;}
+
+/* SPINNER */
+.spinner{width:44px;height:44px;border:3px solid var(–border);border-top-color:var(–cyan);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* CENTRE */
+.centre{text-align:center;padding:60px 16px;}
+
+/* PROMPT BOX */
+.prompt-box{background:var(–card);border:1px solid var(–border);border-radius:12px;padding:16px;margin-bottom:12px;}
+.prompt-lbl{font-size:9px;color:var(–cyan);letter-spacing:2px;font-weight:700;margin-bottom:8px;}
+.prompt-txt{font-size:12px;line-height:1.8;color:var(–text);margin-bottom:12px;}
+.copy-btn{padding:7px 16px;border-radius:7px;border:1px solid var(–border);color:var(–muted);font-size:11px;font-family:monospace;letter-spacing:.5px;}
+.copy-btn.copied{color:var(–green);border-color:rgba(74,222,128,.3);}
+
+/* ALERT BOXES */
+.alert-red{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:12px;padding:16px;display:flex;gap:12px;margin-bottom:14px;}
+.alert-yel{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-radius:12px;padding:16px;display:flex;gap:12px;margin-bottom:14px;}
+.alert-icon{font-size:20px;flex-shrink:0;}
+.alert-title{font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:4px;}
+.alert-text{font-size:12px;color:var(–muted);line-height:1.6;}
+</style>
+
+</head>
+<body>
+
+<!-- HEADER -->
+
+<div class="header">
+  <div>
+    <div class="logo">FELIX<span>.</span>TRADER</div>
+    <span class="logo-sub">Trade Republic Pro</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div style="font-size:10px;color:var(--muted)" id="dt"></div>
+    <div class="market-pill closed" id="mkt">● Laden...</div>
+  </div>
+</div>
+
+<!-- TABS -->
+
+<div class="tabs">
+  <button class="tab active" onclick="goTo('analyse',this)">⚡ Analyse</button>
+  <button class="tab" onclick="goTo('portfolio',this)">💼 Portfolio</button>
+  <button class="tab" onclick="goTo('checklist',this)">✅ Checkliste</button>
+  <button class="tab" onclick="goTo('prompts',this)">📋 Prompts</button>
+</div>
+
+<!-- CONTENT -->
+
+<div class="content">
+
+  <!-- ══ ANALYSE ══ -->
+
+  <div id="pane-analyse" class="pane active">
+
+```
+<!-- IDLE -->
+<div id="a-idle" class="centre">
+  <div style="font-size:52px;margin-bottom:16px">⚡</div>
+  <div style="font-size:24px;font-weight:900;letter-spacing:2px;color:var(--cyan);margin-bottom:10px">TAGES-ANALYSE</div>
+  <div style="font-size:13px;color:var(--muted);max-width:320px;margin:0 auto 28px;line-height:1.9">
+    KI scannt täglich neu den Markt:<br>
+    <strong style="color:var(--text)">Fundamentalstark · Ohne Grund gefallen · Catalyst 5–14 Tage</strong><br>
+    <span style="font-size:11px">Nur Trade Republic · Mit Stop-Loss & Zielen</span>
+  </div>
+  <button class="btn-primary" onclick="startScan()">⚡ JETZT ANALYSIEREN</button>
+  <div style="margin-top:12px;font-size:11px;color:var(--muted)">Ca. 30 Sekunden · Täglich neue Ergebnisse</div>
+</div>
+
+<!-- LOADING -->
+<div id="a-load" class="centre" style="display:none">
+  <div class="spinner"></div>
+  <div style="color:var(--cyan);font-size:15px;font-weight:700;letter-spacing:1px;margin-bottom:8px">ANALYSIERE MARKT</div>
+  <div style="color:var(--muted);font-size:12px" id="a-step">Scanne Markt...</div>
+</div>
+
+<!-- ERROR -->
+<div id="a-err" class="centre" style="display:none">
+  <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+  <div style="color:var(--red);font-weight:700;font-size:16px;margin-bottom:8px">Analyse fehlgeschlagen</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6;max-width:300px;margin:0 auto 20px" id="a-errmsg"></div>
+  <button class="btn-ghost" onclick="resetScan()">↺ Erneut versuchen</button>
+</div>
+
+<!-- RESULTS -->
+<div id="a-res" style="display:none"></div>
+```
+
+  </div>
+
+  <!-- ══ PORTFOLIO ══ -->
+
+  <div id="pane-portfolio" class="pane">
+
+```
+<div class="card">
+  <div class="card-lbl">📱 Dein Trade Republic Portfolio</div>
+
+  <div class="pos-item" style="border-left:3px solid var(--green)">
+    <div style="display:flex;justify-content:space-between">
+      <span class="pos-ticker" style="color:var(--green)">FTSE ALL-WORLD ETF</span>
+      <span style="font-weight:700;color:var(--green)">+4,25%</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">€2.017</div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:4px">✅ Halten — kein Handlungsbedarf</div>
+  </div>
+
+  <div class="pos-item" style="border-left:3px solid var(--cyan)">
+    <div style="display:flex;justify-content:space-between">
+      <span class="pos-ticker" style="color:var(--cyan)">ALPHABET (GOOGLE)</span>
+      <span style="font-weight:700;color:var(--cyan)">+60,37%</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">€1.677</div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:4px">⚠️ 30% verkaufen · Stop-Loss auf +40% nachziehen</div>
+  </div>
+
+  <div class="pos-item" style="border-left:3px solid var(--red)">
+    <div style="display:flex;justify-content:space-between">
+      <span class="pos-ticker" style="color:var(--red)">LVMH</span>
+      <span style="font-weight:700;color:var(--red)">–30,29%</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">€1.393</div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:4px">🚨 Stop-Loss €440 sofort setzen · nicht nachkaufen</div>
+  </div>
+
+  <div class="pos-item" style="border-left:3px solid var(--yel)">
+    <div style="display:flex;justify-content:space-between">
+      <span class="pos-ticker" style="color:var(--yel)">HENSOLDT</span>
+      <span style="font-weight:700;color:var(--yel)">–7,64%</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">€925</div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:4px">✅ Halten · Geopolitik-Rückenwind · SL –12% setzen</div>
+  </div>
+
+  <div class="pos-item" style="border-left:3px solid var(--pur)">
+    <div style="display:flex;justify-content:space-between">
+      <span class="pos-ticker" style="color:var(--pur)">NOVO NORDISK</span>
+      <span style="font-weight:700;color:var(--pur)">–30,38%</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">€619</div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:4px">⏳ Halten · KGV 10 · Wegovy HD · keine Panik</div>
+  </div>
+
+  <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:8px;padding:12px;margin-top:6px;font-size:11px;font-family:monospace;line-height:2.2;color:#94a3b8">
+    🚨 HEUTE IN TR APP:<br>
+    1. <span style="color:var(--red)">LVMH → Stop bei €440</span><br>
+    2. <span style="color:var(--cyan)">Alphabet → 30% verkaufen</span><br>
+    3. <span style="color:var(--green)">€5.000 Cash bewusst halten</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-lbl">➕ Neue Position tracken</div>
+  <div class="grid2">
+    <div class="input-group"><label class="input-lbl">Ticker</label><input id="p-ticker" placeholder="z.B. XOM" style="text-transform:uppercase"></div>
+    <div class="input-group"><label class="input-lbl">Betrag €</label><input id="p-amount" type="number" placeholder="1000"></div>
+    <div class="input-group"><label class="input-lbl">Kaufkurs</label><input id="p-entry" type="number" placeholder="118.50"></div>
+    <div class="input-group"><label class="input-lbl">Stop-Loss</label><input id="p-sl" type="number" placeholder="112.00"></div>
+    <div class="input-group"><label class="input-lbl">Ziel 1</label><input id="p-t1" type="number" placeholder="128.00"></div>
+    <div class="input-group"><label class="input-lbl">Ziel 2</label><input id="p-t2" type="number" placeholder="135.00"></div>
+  </div>
+  <button class="btn-add" onclick="addPos()">+ Position hinzufügen</button>
+  <div id="pos-list"></div>
+</div>
+```
+
+  </div>
+
+  <!-- ══ CHECKLISTE ══ -->
+
+  <div id="pane-checklist" class="pane">
+    <div class="card">
+      <div class="card-lbl">✅ Tägliche Checkliste <span id="cl-count" style="margin-left:4px;color:var(--cyan)">0/9</span></div>
+      <div id="cl-list"></div>
+      <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+        <button class="btn-ghost" onclick="resetCL()">↺ Reset</button>
+        <span id="cl-done-msg" style="font-size:12px;color:var(--green);font-weight:700;display:none">✅ Bereit zum Traden!</span>
+      </div>
+    </div>
+
+```
+<div class="card">
+  <div class="card-lbl">⚖️ 3 Goldene Regeln</div>
+  <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:8px;padding:14px;margin-bottom:10px">
+    <div style="font-size:26px;font-weight:900;color:var(--red)">01</div>
+    <div style="font-weight:700;margin:4px 0">Stop-Loss ist heilig</div>
+    <div style="font-size:11px;color:var(--muted)">Kurs auf SL-Level → sofort verkaufen. Immer. Keine Ausnahmen.</div>
+  </div>
+  <div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);border-radius:8px;padding:14px;margin-bottom:10px">
+    <div style="font-size:26px;font-weight:900;color:var(--green)">02</div>
+    <div style="font-weight:700;margin:4px 0">Cash ist Position</div>
+    <div style="font-size:11px;color:var(--muted)">Nicht investiert sein ist keine Niederlage. Auf das richtige Setup warten.</div>
+  </div>
+  <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:14px">
+    <div style="font-size:26px;font-weight:900;color:var(--yel)">03</div>
+    <div style="font-weight:700;margin:4px 0">Plan vor Emotion</div>
+    <div style="font-size:11px;color:var(--muted)">Entry und Exit werden VORHER geplant. Keine spontanen Entscheidungen.</div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- ══ PROMPTS ══ -->
+
+  <div id="pane-prompts" class="pane">
+    <div class="prompt-box">
+      <div class="prompt-lbl">MORGENS 08:30 — TÄGLICH</div>
+      <div class="prompt-txt">Guten Morgen. Tägliches Trading-Briefing für heute [DATUM]. Trade Republic, Swing-Trade, €5.000 Budget, max. €1.000/Position. 1) Marktlage (VIX, Öl, S&P, EUR/USD) 2) Watchlist: XOM, GLD, LMT, NVDA, MSFT — Signal, Entry, SL, Ziel 1+2 3) Catalyst heute 4) Welche 1-3 Aktien kaufen? 5) Vergessene Risiken? Nur Trade Republic Assets.</div>
+      <button class="copy-btn" onclick="copyPrompt(this)">📋 Kopieren</button>
+    </div>
+    <div class="prompt-box">
+      <div class="prompt-lbl">NEUE TOP 5 AKTIEN</div>
+      <div class="prompt-txt">Finde 5 beste Swing-Trade Aktien heute [DATUM]. Fundamentalstark + ohne Grund gefallen + Catalyst 5-14 Tage. Nur Trade Republic. Entry, SL, Ziel 1 (50%), Ziel 2 (30%), R/R. Felix hält: FTSE ETF, Alphabet +60%, LVMH -30%, Hensoldt -7%, Novo Nordisk -30%.</div>
+      <button class="copy-btn" onclick="copyPrompt(this)">📋 Kopieren</button>
+    </div>
+    <div class="prompt-box">
+      <div class="prompt-lbl">ABENDS 17:45</div>
+      <div class="prompt-txt">Abend-Briefing [DATUM]. Marktschluss heute. Meine Positionen morgen? Events heute Nacht? Stop-Loss anpassen? Plan für morgen früh? Trade Republic.</div>
+      <button class="copy-btn" onclick="copyPrompt(this)">📋 Kopieren</button>
+    </div>
+    <div class="prompt-box">
+      <div class="prompt-lbl">NOTFALL — STARKE BEWEGUNG</div>
+      <div class="prompt-txt">NOTFALL — starke Marktbewegung. Grund? Meine Positionen betroffen (FTSE, Alphabet, LVMH, Hensoldt, Novo Nordisk)? Stop-Loss anpassen? Kaufchance? 3 konkrete Handlungspunkte. Trade Republic.</div>
+      <button class="copy-btn" onclick="copyPrompt(this)">📋 Kopieren</button>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<script>
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function goTo(name, el) {
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('pane-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ═══════════════════════════════════════
+// CLOCK & MARKET STATUS
+// ═══════════════════════════════════════
+function tick() {
+  const n = new Date();
+  document.getElementById('dt').textContent =
+    n.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'short'}) + ' · ' +
+    n.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  const mins = n.getUTCHours()*60 + n.getUTCMinutes();
+  const open = mins >= 14*60+30 && mins < 21*60 && n.getDay() > 0 && n.getDay() < 6;
+  const pill = document.getElementById('mkt');
+  pill.textContent = open ? '● Markt offen' : '● Markt geschlossen';
+  pill.className = 'market-pill ' + (open ? 'open' : 'closed');
+}
+tick();
+setInterval(tick, 30000);
+
+// ═══════════════════════════════════════
+// API
+// ═══════════════════════════════════════
+function extractJSON(txt) {
+  if (!txt) return null;
+  try { return JSON.parse(txt.trim()); } catch(e) {}
+  const s = txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  try { return JSON.parse(s); } catch(e) {}
+  const f = s.indexOf('{'), l = s.lastIndexOf('}');
+  if (f !== -1 && l > f) {
+    try { return JSON.parse(s.substring(f, l+1)); } catch(e) {
+      try { return JSON.parse(s.substring(f,l+1).replace(/,(\s*[}\]])/g,'$1')); } catch(e2) {}
+    }
+  }
+  return null;
+}
+
+async function callAPI(messages, search) {
+  const body = { model:'claude-sonnet-4-20250514', max_tokens:1000, messages };
+  if (search) body.tools = [{type:'web_search_20250305', name:'web_search'}];
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+  });
+  if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error?.message||'HTTP '+r.status); }
+  const d = await r.json();
+  return (d.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+}
+
+const todayDE = () => new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'});
+const timeDE  = () => new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+
+// ═══════════════════════════════════════
+// SCAN
+// ═══════════════════════════════════════
+function show(id) {
+  ['a-idle','a-load','a-err','a-res'].forEach(x => {
+    document.getElementById(x).style.display = x===id ? (id==='a-res'?'block':'block') : 'none';
+  });
+}
+
+function resetScan() { show('a-idle'); }
+
+async function startScan() {
+  show('a-load');
+  const stepEl = document.getElementById('a-step');
+  try {
+    stepEl.textContent = '🔍 Scanne Markt nach deiner Strategie...';
+    const research = await callAPI([{
+      role:'user',
+      content:`Heute ${todayDE()}. Analysiere Marktlage (VIX, Öl, S&P 500, Geopolitik) und finde 5 Aktien auf Trade Republic: fundamentalstark + ohne echten Grund gefallen + konkreter Catalyst in 5-14 Tagen. Felix hält bereits: FTSE ETF, Alphabet +60%, LVMH -30%, Hensoldt -7%, Novo Nordisk -30%. Budget €5.000, max €1.000 pro Position. Swing-Trade.`
+    }], true);
+
+    stepEl.textContent = '📊 Berechne Entry, Stop-Loss und Ziele...';
+    const jTxt = await callAPI([{
+      role:'user',
+      content:`Marktdaten ${todayDE()}:\n${research}\n\nNur JSON — absolut kein Text davor oder danach:\n{"vix":"","oel":"","trend":"bullish|bearish|mixed","regime":"z.B. Stagflation","fazit":"1 Satz Marktlage","kaufen_heute":true,"aktien":[{"ticker":"","name":"","kurs":"","entry":"","sl":"","ziel1":"","ziel2":"","rr":"1:X","signal":"KAUFEN|BEOBACHTEN|WARTEN","grund":"1 Satz warum gefallen","catalyst":"was+wann","max_verlust":"bei €1000"}],"beste":"TICKER","hinweis":"1 vergessenes Risiko"}`
+    }], false);
+
+    const r = extractJSON(jTxt);
+    if (!r || !Array.isArray(r.aktien)) throw new Error('Analyse fehlgeschlagen — bitte erneut versuchen');
+    renderResults(r);
+    show('a-res');
+  } catch(e) {
+    document.getElementById('a-errmsg').textContent = e.message;
+    show('a-err');
+  }
+}
+
+// ═══════════════════════════════════════
+// RENDER RESULTS
+// ═══════════════════════════════════════
+const COLS = ['#4ade80','#22d3ee','#c084fc','#fbbf24','#fb923c'];
+const SIG_COL = { KAUFEN:'#4ade80', BEOBACHTEN:'#22d3ee', WARTEN:'#fbbf24' };
+
+function tag(color, text) {
+  return `<span class="tag" style="background:${color}18;border:1px solid ${color}40;color:${color}">${text}</span>`;
+}
+
+function renderResults(r) {
+  const tC = r.trend==='bullish'?'#4ade80':r.trend==='bearish'?'#f87171':'#fbbf24';
+  let html = `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:18px;font-weight:900">TOP 5 HEUTE ✓</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Analysiert ${timeDE()} · ${todayDE()}</div>
+        </div>
+        <button class="btn-ghost" onclick="resetScan()">↺ Neu</button>
+      </div>
+      <div class="grid3">
+        <div class="metric"><div class="metric-lbl">VIX</div><div class="metric-val" style="color:#f87171">${r.vix||'—'}</div></div>
+        <div class="metric"><div class="metric-lbl">Öl WTI</div><div class="metric-val" style="color:#fb923c">${r.oel||'—'}</div></div>
+        <div class="metric"><div class="metric-lbl">Regime</div><div class="metric-val" style="color:${tC};font-size:14px">${r.regime||'—'}</div></div>
+      </div>
+      ${r.fazit?`<div style="font-size:12px;color:var(--muted);padding:10px 12px;background:var(--card2);border-radius:8px;line-height:1.6">📊 ${r.fazit}</div>`:''}
+    </div>`;
+
+  if (!r.kaufen_heute) {
+    html += `<div class="alert-yel"><div class="alert-icon">⏸</div><div><div class="alert-title" style="color:#fbbf24">HEUTE KEIN ÜBERZEUGENDER KAUF</div><div class="alert-text">Cash halten — warten auf besseres Setup.</div></div></div>`;
+  }
+
+  (r.aktien||[]).forEach((s, i) => {
+    const col = COLS[i] || '#22d3ee';
+    const sigCol = SIG_COL[s.signal] || '#22d3ee';
+    const isBeste = s.ticker === r.beste;
+    html += `
+      <div class="aktie-card" style="border-left:4px solid ${col}">
+        <div class="aktie-head">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+              <span class="aktie-ticker" style="color:${col}">${s.ticker}</span>
+              ${tag(sigCol, s.signal)}
+              ${isBeste ? tag('#4ade80','★ BESTER') : ''}
+            </div>
+            <div class="aktie-name">${s.name||''}</div>
+          </div>
+          <div class="aktie-rr">
+            <div class="aktie-rr-val">${s.rr||'—'}</div>
+            <div class="aktie-rr-lbl">R/R</div>
+          </div>
+        </div>
+
+        <div class="aktie-boxes">
+          <div class="aktie-box">
+            <div class="aktie-box-lbl">Warum gefallen</div>
+            <div class="aktie-box-val" style="color:#f87171">${s.grund||'—'}</div>
+          </div>
+          <div class="aktie-box">
+            <div class="aktie-box-lbl">Catalyst</div>
+            <div class="aktie-box-val" style="color:#c084fc">${s.catalyst||'—'}</div>
+          </div>
+        </div>
+
+        <div class="grid5">
+          <div class="level-cell"><div class="level-lbl">KURS</div><div class="level-val" style="color:var(--text)">${s.kurs||'—'}</div></div>
+          <div class="level-cell"><div class="level-lbl">ENTRY</div><div class="level-val" style="color:#22d3ee">${s.entry||'—'}</div></div>
+          <div class="level-cell"><div class="level-lbl">STOP</div><div class="level-val" style="color:#f87171">${s.sl||'—'}</div></div>
+          <div class="level-cell"><div class="level-lbl">ZIEL 1</div><div class="level-val" style="color:#4ade80">${s.ziel1||'—'}</div></div>
+          <div class="level-cell"><div class="level-lbl">VERLUST</div><div class="level-val" style="color:#f87171">${s.max_verlust||'—'}</div></div>
+        </div>
+
+        ${s.ziel2?`<div style="margin-top:8px;font-size:10px;color:var(--muted);font-family:monospace">🎯 Ziel 2: <span style="color:#4ade80">${s.ziel2}</span> → 30% · 🔄 Trailing Stop</div>`:''}
+      </div>`;
+  });
+
+  if (r.hinweis) {
+    html += `<div class="alert-red"><div class="alert-icon">⚠️</div><div><div class="alert-title" style="color:#f87171">DAS KÖNNTE DU VERGESSEN HABEN</div><div class="alert-text">${r.hinweis}</div></div></div>`;
+  }
+
+  document.getElementById('a-res').innerHTML = html;
+}
+
+// ═══════════════════════════════════════
+// PORTFOLIO
+// ═══════════════════════════════════════
+let positions = [];
+
+function addPos() {
+  const ticker = document.getElementById('p-ticker').value.toUpperCase();
+  const amount = document.getElementById('p-amount').value;
+  const entry  = document.getElementById('p-entry').value;
+  const sl     = document.getElementById('p-sl').value;
+  const t1     = document.getElementById('p-t1').value;
+  const t2     = document.getElementById('p-t2').value;
+  if (!ticker || !amount) { alert('Ticker und Betrag eingeben'); return; }
+  positions.push({ id:Date.now(), ticker, amount, entry, sl, t1, t2 });
+  renderPos();
+  ['p-ticker','p-amount','p-entry','p-sl','p-t1','p-t2'].forEach(id => document.getElementById(id).value='');
+}
+
+function removePos(id) {
+  positions = positions.filter(p => p.id !== id);
+  renderPos();
+}
+
+function renderPos() {
+  const list = document.getElementById('pos-list');
+  if (!positions.length) { list.innerHTML=''; return; }
+  list.innerHTML = '<div style="height:10px"></div>' + positions.map(p => `
+    <div class="pos-item" style="border-left:3px solid #22d3ee;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <span class="pos-ticker" style="color:#22d3ee">${p.ticker}</span>
+        <button onclick="removePos(${p.id})" style="font-size:12px;color:var(--muted);padding:2px 8px;border-radius:5px;border:1px solid var(--border)">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);font-family:monospace;line-height:1.9;margin-top:6px">
+        €${p.amount}${p.entry?` · Kauf: ${p.entry}`:''}
+        ${p.sl?`<br><span style="color:#f87171">🛑 Stop-Loss: ${p.sl}</span>`:''}
+        ${p.t1?`<br><span style="color:#4ade80">🎯 Ziel 1: ${p.t1}</span>`:''}
+        ${p.t2?`<br><span style="color:#22d3ee">🎯 Ziel 2: ${p.t2}</span>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// CHECKLISTE
+// ═══════════════════════════════════════
+const CL_ITEMS = [
+  'Futures gecheckt (S&P, Nasdaq, Öl)',
+  'VIX — über oder unter 30?',
+  'Ölpreis — über oder unter $90?',
+  'Tages-Analyse gestartet (Tab ⚡)',
+  'Psychologie-Check gemacht',
+  'Stop-Loss VORHER definiert',
+  'Max. €1.000 pro Position',
+  'Kauf zwischen 15:30–21:30 Uhr',
+  'Stop-Loss in TR App eingetragen',
+];
+let clChecked = Array(CL_ITEMS.length).fill(false);
+
+function renderCL() {
+  const done = clChecked.filter(Boolean).length;
+  document.getElementById('cl-count').textContent = done + '/' + CL_ITEMS.length;
+  document.getElementById('cl-done-msg').style.display = done === CL_ITEMS.length ? 'block' : 'none';
+  document.getElementById('cl-list').innerHTML = CL_ITEMS.map((text, i) => `
+    <div class="cl-item" onclick="toggleCL(${i})">
+      <div class="cl-box${clChecked[i]?' chk':''}">${clChecked[i]?'✓':''}</div>
+      <div class="cl-text${clChecked[i]?' done':''}">${text}</div>
+    </div>`).join('');
+}
+
+function toggleCL(i) {
+  clChecked[i] = !clChecked[i];
+  renderCL();
+}
+
+function resetCL() {
+  clChecked = Array(CL_ITEMS.length).fill(false);
+  renderCL();
+}
+
+renderCL();
+
+// ═══════════════════════════════════════
+// PROMPTS
+// ═══════════════════════════════════════
+function copyPrompt(btn) {
+  const txt = btn.previousElementSibling.textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    btn.textContent = '✓ Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent='📋 Kopieren'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    // Fallback für ältere iOS
+    const ta = document.createElement('textarea');
+    ta.value = txt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✓ Kopiert!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent='📋 Kopieren'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>
